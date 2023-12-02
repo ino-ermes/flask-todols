@@ -32,19 +32,23 @@ def login():
     user = _userColl.find_one({"email": email})
 
     if user and check_password_hash(user["hash_password"], password):
-        user["token"] = jwt.encode(
+        user["_id"] = str(user["_id"])
+        token = jwt.encode(
             {
                 "user_id": user["_id"],
                 "exp": datetime.now(tz=timezone.utc)
-                + timedelta(days=os.environ.get("JWT_LIFETIME")),
+                + timedelta(days=int(os.environ.get("JWT_LIFETIME"))),
             },
             os.environ.get("JWT_SECRET"),
             algorithm="HS256",
         )
-        user["_id"] = str(user["_id"])
-        user["hash_password"] = "hidden"
-        return jsonify(user)
-    raise UnauthenticatedError("Invalid username or password")
+        return jsonify(
+            user_id=user["_id"],
+            username=user["username"],
+            role=user["role"],
+            access_token=token,
+        )
+    raise UnauthenticatedError("Invalid email or password")
 
 
 @authBP.post("/register")
@@ -89,9 +93,12 @@ def register():
         }
     )
     newUser = _userColl.find_one({"_id": newUser.inserted_id})
-    newUser["hash_password"] = "hidden"
-    newUser["_id"] = str(newUser["_id"])
-    return jsonify(newUser)
+
+    return jsonify(
+        user_id=str(newUser["_id"]),
+        username=newUser["username"],
+        role=newUser["role"],
+    )
 
 
 @authBP.post("/testAuth")
