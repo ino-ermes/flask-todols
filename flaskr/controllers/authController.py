@@ -30,7 +30,6 @@ def login():
     password = password.strip()
 
     user = _userColl.find_one({"email": email})
-    user["_id"] = str(user["_id"])
 
     if user and check_password_hash(user["hash_password"], password):
         user["token"] = jwt.encode(
@@ -42,6 +41,7 @@ def login():
             os.environ.get("JWT_SECRET"),
             algorithm="HS256",
         )
+        user["_id"] = str(user["_id"])
         user["hash_password"] = "hidden"
         return jsonify(user)
     raise UnauthenticatedError("Invalid username or password")
