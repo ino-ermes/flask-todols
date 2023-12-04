@@ -1,11 +1,16 @@
 from flask import jsonify
 from http import HTTPStatus
+from werkzeug.exceptions import HTTPException
 
-def default_http_handler(e):    
-    if not e.message:
-        e.message = 'Something went wrong'
-    if not e.status_code:
-        e.status_code: HTTPStatus.INTERNAL_SERVER_ERROR
+def default_http_handler(e):
+    message = 'Url does not exist'
+    status_code = HTTPStatus.NOT_FOUND
+    
+    if isinstance(e, HTTPException):
+        message = e.description or 'Url does not exist'
+        status_code = e.response.status_code if e.response else HTTPStatus.NOT_FOUND
+
     return jsonify(
-        message=e.message
-    ), e.status_code
+        message=message
+    ), status_code
+        
