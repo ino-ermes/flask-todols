@@ -7,4 +7,6 @@ class CustomAPIError(Exception):
     def to_dict(self):
         rv = dict()
         rv['message'] = self.message
+        if hasattr(self, 'status_code'):
+            rv['status code'] = self.status_code
         return rv

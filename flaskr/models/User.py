@@ -38,12 +38,12 @@ user_validator = {
                 'bsonType': 'string',
                 'description': 'must be a string and is required',
             },
-            'password_token_reset': {
+            'pwr_token': {
                 'bsonType': 'string',
                 'description': 'must be a string',
             },
-            'reset_token_expire_time': {
-                'bsonType': 'string',
+            'pwr_expire': {
+                'bsonType': 'date',
                 'description': 'must be a string',
             },
         },

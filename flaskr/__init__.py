@@ -16,6 +16,14 @@ def create_app(test_config=None):
     from flaskr.db import db
     db.connectDB()    
     
+    from flaskr.utils.email_helper import EmailSender
+    app.config['MAIL_SERVER'] = "smtp.googlemail.com"
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+    app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+    EmailSender.get_instance().init_app(app)
+    
     # error handler
     from flaskr.errors.bad_request import BadRequestError
     from flaskr.errors.not_found import NotFoundError
