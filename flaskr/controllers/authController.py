@@ -37,9 +37,9 @@ def login():
             {
                 "user_id": user["_id"],
                 "exp": datetime.now(tz=timezone.utc)
-                + timedelta(days=int(os.environ.get("JWT_LIFETIME"))),
+                + timedelta(days=int(os.getenv("JWT_LIFETIME"))),
             },
-            os.environ.get("JWT_SECRET"),
+            os.getenv("JWT_SECRET"),
             algorithm="HS256",
         )
         return jsonify(

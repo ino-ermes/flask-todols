@@ -1,9 +1,12 @@
 import os
 from flask import Flask
 from werkzeug.exceptions import HTTPException
+from dotenv import load_dotenv
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
+
+    load_dotenv()
 
     try:
         os.makedirs(app.instance_path)

@@ -13,6 +13,6 @@ def connectDB():
 
     if __client:
         __client.close()
-    DATABASE_URL = os.environ.get("MONGO_URL")
+    DATABASE_URL = os.getenv("MONGO_URL")
     client = MongoClient(DATABASE_URL)
     __todols = client.todols
