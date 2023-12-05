@@ -1,7 +1,9 @@
 from flask_mail import Mail, Message
 
-class EmailSender():
+
+class EmailSender:
     __instance = None
+
     @staticmethod
     def get_instance():
         if EmailSender.__instance is None:
@@ -22,5 +24,7 @@ class EmailSender():
 
     def send_email(self, subject, recipients, sender, body):
         with self.__app.app_context():
-            email = Message(subject=subject, recipients=recipients, sender=sender, body=body)
+            email = Message(
+                subject=subject, recipients=recipients, sender=sender, body=body
+            )
             self.__mail.send(email)

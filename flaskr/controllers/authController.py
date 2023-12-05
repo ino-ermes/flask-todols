@@ -35,10 +35,9 @@ def login():
     user = _userColl.find_one({"email": email})
 
     if user and check_password_hash(user["hash_password"], password):
-        user["_id"] = str(user["_id"])
         token = jwt.encode(
             {
-                "user_id": user["_id"],
+                "user_id": str(user["_id"]),
                 "exp": datetime.now(tz=timezone.utc)
                 + timedelta(days=int(os.getenv("JWT_LIFETIME"))),
             },
@@ -102,7 +101,7 @@ def register():
 
     return {
         "user": {
-            "id": str(newUser["_id"]),
+            "id": newUser["_id"],
             "username": newUser["username"],
             "role": newUser["role"],
         },
@@ -114,7 +113,8 @@ def register():
 def testAuth(user):
     return user
 
-@authBP.post("/forgotpassword")
+
+@authBP.post("/forgot-password")
 def forgotPassword():
     data = request.json
 
@@ -149,7 +149,7 @@ def forgotPassword():
     return {"message": "token has sent to your email address"}
 
 
-@authBP.post("/resetpassword")
+@authBP.post("/reset-password")
 def resetPassword():
     data = request.json
     if not data:
@@ -188,7 +188,7 @@ def resetPassword():
             {
                 "$set": {
                     "hash_password": hash_password,
-                    "pwr_token": 'used',
+                    "pwr_token": "used",
                     "pwr_expire": datetime.now(),
                 }
             },

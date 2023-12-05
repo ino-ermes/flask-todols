@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
 
+    from flask_cors import CORS
+    CORS(app, origins="*")
+
     load_dotenv()
 
     try:
@@ -13,9 +16,11 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    # connect to mongo
     from flaskr.db import db
-    db.connectDB()    
+    db.connectDB() 
     
+    # setup email sender
     from flaskr.utils.email_helper import EmailSender
     app.config['MAIL_SERVER'] = "smtp.googlemail.com"
     app.config['MAIL_PORT'] = 587
@@ -23,6 +28,10 @@ def create_app(test_config=None):
     app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
     app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
     EmailSender.get_instance().init_app(app)
+    
+    # json converter
+    from flaskr.utils.json_helper import CustomJSONProvider
+    app.json = CustomJSONProvider(app)
     
     # error handler
     from flaskr.errors.bad_request import BadRequestError
@@ -42,5 +51,7 @@ def create_app(test_config=None):
     app.register_blueprint(authBP)
     
     # api/v1/workspace
+    from flaskr.controllers.workspaceController import wsBP
+    app.register_blueprint(wsBP)
 
     return app

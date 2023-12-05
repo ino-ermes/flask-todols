@@ -4,8 +4,10 @@ import os
 __todols = None
 __client = None
 
+
 def getDB():
     return __todols
+
 
 def connectDB():
     global __todols
