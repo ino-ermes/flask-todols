@@ -6,9 +6,9 @@ database = db.getDB()
 _userColl = None
 
 try:
-    _userColl = database.create_collection("user")
+    _userColl = database.create_collection("users")
 except:
-    _userColl = database.get_collection("user")
+    _userColl = database.get_collection("users")
 
 _userColl.create_index([("username", ASCENDING)], unique=True)
 _userColl.create_index([("email", ASCENDING)], unique=True)
@@ -50,4 +50,4 @@ user_validator = {
     }
 }
 
-database.command("collMod", "user", validator=user_validator)
+database.command("collMod", "users", validator=user_validator)

@@ -5,9 +5,9 @@ database = db.getDB()
 _postColl = None
 
 try:
-    _postColl = database.create_collection("post")
+    _postColl = database.create_collection("posts")
 except:
-    _postColl = database.get_collection("post")
+    _postColl = database.get_collection("posts")
 
 post_validator = {
     "$jsonSchema": {
@@ -34,4 +34,4 @@ post_validator = {
     }
 }
 
-database.command("collMod", "post", validator=post_validator)
+database.command("collMod", "posts", validator=post_validator)

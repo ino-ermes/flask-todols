@@ -5,9 +5,9 @@ database = db.getDB()
 _tagColl = None
 
 try:
-    _tagColl = database.create_collection("tag")
+    _tagColl = database.create_collection("tags")
 except:
-    _tagColl = database.get_collection("tag")
+    _tagColl = database.get_collection("tags")
 
 tag_validator = {
     "$jsonSchema": {
@@ -50,4 +50,4 @@ tag_validator = {
     }
 }
 
-database.command("collMod", "tag", validator=tag_validator)
+database.command("collMod", "tags", validator=tag_validator)

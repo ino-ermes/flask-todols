@@ -6,7 +6,7 @@ from flaskr.errors.unauthenicated import UnauthenticatedError
 from datetime import datetime
 from flaskr.middlewares.auth import access_token_required
 
-wsBP = Blueprint("ws", __name__, url_prefix="/api/v1/workspace")
+wsBP = Blueprint("ws", __name__, url_prefix="/api/v1/workspaces")
 
 
 @wsBP.get("/")

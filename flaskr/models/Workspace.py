@@ -5,9 +5,9 @@ database = db.getDB()
 _workspaceColl = None
 
 try:
-    _workspaceColl = database.create_collection("workspace")
+    _workspaceColl = database.create_collection("workspaces")
 except:
-    _workspaceColl = database.get_collection("workspace")
+    _workspaceColl = database.get_collection("workspaces")
 
 workspace_validator = {
     "$jsonSchema": {
@@ -30,4 +30,4 @@ workspace_validator = {
     }
 }
 
-database.command("collMod", "workspace", validator=workspace_validator)
+database.command("collMod", "workspaces", validator=workspace_validator)
