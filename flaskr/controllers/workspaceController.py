@@ -17,6 +17,7 @@ def getAllWorkspaces(user):
     return {"workspaces": list(wss)}
 
 
+
 @wsBP.post("/")
 @access_token_required
 def createWorkspace(user):
