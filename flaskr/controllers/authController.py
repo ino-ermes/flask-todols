@@ -108,12 +108,6 @@ def register():
     }
 
 
-@authBP.post("/testAuth")
-@access_token_required
-def testAuth(user):
-    return user
-
-
 @authBP.post("/forgot-password")
 def forgotPassword():
     data = request.json
