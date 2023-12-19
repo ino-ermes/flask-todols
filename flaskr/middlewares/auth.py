@@ -19,11 +19,12 @@ def access_token_required(f):
             raise UnauthenticatedError("Authentication Token is missing!")
 
         data = jwt.decode(token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
-        current_user = _userColl.find_one({"_id": bson.ObjectId(data["user_id"])})
+        
+        userId = data["user_id"]
 
-        if current_user is None:
+        if userId is None:
             raise UnauthenticatedError("Invalid Authentication token!")
 
-        return f(current_user, *args, **kwargs)
+        return f(userId, *args, **kwargs)
 
     return decorated
