@@ -54,4 +54,8 @@ def create_app(test_config=None):
     from flaskr.controllers.workspaceController import wsBP
     app.register_blueprint(wsBP)
 
+    # api/v1/posts
+    from flaskr.controllers.postController import postBP
+    app.register_blueprint(postBP)
+
     return app
