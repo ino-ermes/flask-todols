@@ -5,14 +5,15 @@ from flaskr.errors.not_found import NotFoundError
 from flaskr.errors.unauthenicated import UnauthenticatedError
 from datetime import datetime
 from flaskr.middlewares.auth import access_token_required
+from bson import ObjectId
 
 wsBP = Blueprint("ws", __name__, url_prefix="/api/v1/workspaces")
 
 
 @wsBP.get("/")
 @access_token_required
-def getAllWorkspaces(user):
-    wss = _workspaceColl.find({"user_id": user["_id"]}, {"user_id": 0})
+def getAllWorkspaces(userId):
+    wss = _workspaceColl.find({"user_id": ObjectId(userId)}, {"user_id": 0})
 
     return {"workspaces": list(wss)}
 
@@ -20,7 +21,7 @@ def getAllWorkspaces(user):
 
 @wsBP.post("/")
 @access_token_required
-def createWorkspace(user):
+def createWorkspace(userId):
     data = request.json
 
     if not data or not data.get("title"):
@@ -32,7 +33,7 @@ def createWorkspace(user):
         raise BadRequestError("Title is blank")
 
     ws = {
-        "user_id": user["_id"],
+        "user_id": ObjectId(userId),
         "title": ws_title,
         "created_at": datetime.now(),
     }
