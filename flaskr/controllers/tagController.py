@@ -1,5 +1,5 @@
 from flask import request, Blueprint
-from bson.objectid import ObjectId
+from bson import ObjectId
 
 from flaskr.errors.bad_request import BadRequestError
 from flaskr.errors.forbidden import ForbiddenError
@@ -9,7 +9,6 @@ from flaskr.middlewares.auth import access_token_required
 from flaskr.models.Tag import _tagColl
 from flaskr.models.Post import _postColl
 from flaskr.models.Workspace import _workspaceColl
-import isodate as iso
 tagBP = Blueprint("tag", __name__, url_prefix="/api/v1/tags")
 
 
@@ -98,7 +97,7 @@ def getTag(requestUserId, tagId):
     return {"tag": tag}
 
 
-@tagBP.put("/<tagId>")
+@tagBP.patch("/<tagId>")
 @access_token_required
 def updateTag(requestUserId, tagId):
     data = request.json
@@ -120,15 +119,26 @@ def updateTag(requestUserId, tagId):
     if userId != requestUserId:
         raise ForbiddenError("Permission denied!")
     
-    updateTag = {
+    requestData = {
         "title": data.get("title"),
         "category": data.get("category"),
         "body": data.get("body"),
         "status": data.get("status"),
-        "deadline": datetime.strptime(data.get("deadline"), "%Y/%m/%d"),
+        "deadline": data.get("deadline"),
         "pos": data.get("pos"),
     }
+    if requestData.get("deadline"):
+        requestData["deadline"] = datetime.strptime(data.get("deadline"), "%Y/%m/%d")
 
+    if data.get("post_id") and data.get("post_id") != str(post["_id"]):
+        postToChange = _postColl.find_one({"_id": ObjectId(data.get("post_id"))}, {"workspace_id": 1})
+        if postToChange and postToChange["workspace_id"] == post["workspace_id"]:
+            requestData["post_id"] = postToChange["_id"]
+        else:
+            raise BadRequestError("Can't change tag's positon")
+
+    updateTag = {k: v for k, v in requestData.items() if v is not None}
+    
     updatedTag = _tagColl.find_one_and_update(
         {"_id": ObjectId(tagId)}, {"$set": updateTag}, return_document=True
     )

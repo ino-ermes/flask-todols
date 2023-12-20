@@ -118,7 +118,7 @@ def getPost(requestUserId, postId):
     return {"post": post}
 
 
-@postBP.put("/<postId>")
+@postBP.patch("/<postId>")
 @access_token_required
 def updatePost(requestUserId, postId):
     data = request.json
@@ -133,13 +133,15 @@ def updatePost(requestUserId, postId):
     if workspace["user_id"] != requestUserId:
         raise ForbiddenError("Permission denied!")
 
-    update = {
+    requestData = {
         "title": data.get("title"),
         "pos": data.get("pos"),
     }
+    
+    updateTag = {k: v for k, v in requestData.items() if v is not None}
 
     updatedPost = _postColl.find_one_and_update(
-        {"_id": ObjectId(postId)}, {"$set": update}, return_document=True
+        {"_id": ObjectId(postId)}, {"$set": updateTag}, return_document=True
     )
     return {"post": updatedPost}
 
