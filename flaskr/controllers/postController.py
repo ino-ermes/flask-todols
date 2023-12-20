@@ -6,20 +6,26 @@ from flaskr.models.Workspace import _workspaceColl
 from bson.objectid import ObjectId
 
 from datetime import datetime
+from flaskr.middlewares.auth import access_token_required
 
 
 postBP = Blueprint("post", __name__, url_prefix="/api/v1/posts")
 
 @postBP.post("/")
-def createPost():
+@access_token_required
+def createPost(user):
     data = request.json
     if not data:
         raise BadRequestError("Please provide data")
     
     workspaceId = ObjectId(data.get("workspaceId"))
-    if not _workspaceColl.find_one({"_id": workspaceId}):
+    workspace = _workspaceColl.find_one({"_id": workspaceId})
+    if not workspace:
         raise BadRequestError("Invalid data")
     
+    if workspace["user_id"] != user["_id"]:
+        raise BadRequestError("Permission denied!")
+
     post = {
         "workspace_id": workspaceId,
         "title": data.get("title"),
@@ -52,13 +58,21 @@ def getPost(postId):
     return {"post": post}
 
 @postBP.put("/<string:postId>")
-def updatePost(postId):
+@access_token_required
+def updatePost(user, postId):
+    print(user)
     update_data = request.json
     if not update_data:
         raise BadRequestError("Please provide data")
     
+    update_data.pop("workspace_id", None)
+    
     post_Id = ObjectId(postId)
     post = _postColl.find_one({"_id": post_Id})
+    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
+    if workspace["user_id"] != user["_id"]:
+        raise BadRequestError("Permission denied!")
+    
     if not post:
         raise BadRequestError("Invalid data")
     result = _postColl.update_one({"_id": post_Id}, {"$set": update_data})
@@ -69,17 +83,18 @@ def updatePost(postId):
     }
 
 @postBP.delete("/<string:postId>")
-def deletePost(postId):
+@access_token_required
+def deletePost(user, postId):
     post_Id = ObjectId(postId)
-    if not _postColl.find_one({"_id": post_Id}):
+    post = _postColl.find_one({"_id": post_Id})
+    if not post:
         raise BadRequestError("Invalid data")
+    
+    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
+    if workspace["user_id"] != user["_id"]:
+        raise BadRequestError("Permission denied!")
 
     result = _postColl.delete_one({"_id": post_Id})
     return {
         "status": "Delete Successfuly"
-    }    
-
-
-    
-
-
+    }
