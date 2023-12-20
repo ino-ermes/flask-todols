@@ -4,16 +4,27 @@ from bson.objectid import ObjectId
 from flaskr.errors.bad_request import BadRequestError
 
 from datetime import datetime
-
+from flaskr.middlewares.auth import access_token_required
 from flaskr.models.Tag import _tagColl
+from flaskr.models.Post import _postColl
+from flaskr.models.Workspace import _workspaceColl
 
 tagBP = Blueprint("tag", __name__, url_prefix="/api/v1/tags")
 
 @tagBP.post("/")
-def createTag():
+@access_token_required
+def createTag(user):
     data = request.json
     if not data:
         raise BadRequestError("Please provide data")
+    
+    post = _postColl.find_one({"_id": ObjectId(data.get("post_id"))})
+    if not post:
+        raise BadRequestError("Invalid data")
+    
+    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
+    if workspace["user_id"] != user["_id"]:
+        raise BadRequestError("Permission denied!")
     
     tag = {
         "post_id": ObjectId(data.get("post_id")),
@@ -52,15 +63,20 @@ def getTag(tagId):
     return {"tag": tag}
 
 @tagBP.put("/<string:tagId>")
-def updateTag(tagId):
+@access_token_required
+def updateTag(user, tagId):
     update_data = request.json
     if not update_data:
         raise BadRequestError("Please provide data")
     
     tag_Id = ObjectId(tagId)
-    post = _tagColl.find_one({"_id": tag_Id})
+    post = _postColl.find_one({"_id": tag_Id})
     if not post:
         raise BadRequestError("Invalid data")
+    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
+    if workspace["user_id"] != user["_id"]:
+        raise BadRequestError("Permission denied!")
+
     result = _tagColl.update_one({"_id": tag_Id}, {"$set": update_data})
     updateTag = _tagColl.find_one({"_id": tag_Id})
     return {
@@ -68,12 +84,17 @@ def updateTag(tagId):
     }
 
 @tagBP.delete("/<string:tagId>")
-def deleteTag(tagId):
+@access_token_required
+def deleteTag(user, tagId):
     if not tagId:
         raise BadRequestError("Invalid data")
     
     tag_Id = ObjectId(tagId)
+    tag = _tagColl.find_one({"_id": tag_Id})
+    post = _postColl.find_one({"_id": tag["post_id"]})
+    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
+    if workspace["user_id"] != user["_id"]:
+        raise BadRequestError("Permission denied!")
     if not _tagColl.delete_one({"_id": tag_Id}):
         raise BadRequestError("Invalid data")
-    
     return {"status": "delete Successfuly"}
