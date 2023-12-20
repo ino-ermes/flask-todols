@@ -50,8 +50,12 @@ def create_app(test_config=None):
     from flaskr.controllers.authController import authBP
     app.register_blueprint(authBP)
     
-    # api/v1/workspace
+    # api/v1/workspaces
     from flaskr.controllers.workspaceController import wsBP
     app.register_blueprint(wsBP)
+    
+    # api/v1/users
+    from flaskr.controllers.userController import userBP
+    app.register_blueprint(userBP)
 
     return app

@@ -23,7 +23,7 @@ post_validator = {
                 "description": "must be a string and is required",
             },
             "pos": {
-                "bsonType": "integer",
+                "bsonType": "int",
                 "description": "must be a integer and is required",
             },
             "created_at": {

@@ -103,7 +103,9 @@ def register():
         "user": {
             "id": newUser["_id"],
             "username": newUser["username"],
+            "email": newUser["email"],
             "role": newUser["role"],
+            "created_at": newUser["created_at"],
         },
     }
 
