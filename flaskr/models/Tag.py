@@ -39,7 +39,7 @@ tag_validator = {
                 "description": "must be a date and is required",
             },
             "pos": {
-                "bsonType": "integer",
+                "bsonType": "number",
                 "description": "must be a integer and is required",
             },
             "created_at": {
