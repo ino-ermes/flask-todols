@@ -37,12 +37,17 @@ def create_app(test_config=None):
     from flaskr.errors.bad_request import BadRequestError
     from flaskr.errors.not_found import NotFoundError
     from flaskr.errors.unauthenicated import UnauthenticatedError
+    from flaskr.errors.forbidden import ForbiddenError
+    from pymongo.errors import OperationFailure
     from flaskr.errorHandlers.my_handler import my_handler
+    from flaskr.errorHandlers.pymongo_handler import pymongo_handler
     from flaskr.errorHandlers.default_http_handler import default_http_handler
     from flaskr.errorHandlers.default_handler import default_handler
     app.register_error_handler(BadRequestError, my_handler)
     app.register_error_handler(NotFoundError, my_handler)
     app.register_error_handler(UnauthenticatedError, my_handler)
+    app.register_error_handler(ForbiddenError, my_handler)
+    app.register_error_handler(OperationFailure, pymongo_handler)
     app.register_error_handler(HTTPException, default_http_handler)
     app.register_error_handler(Exception, default_handler)
     

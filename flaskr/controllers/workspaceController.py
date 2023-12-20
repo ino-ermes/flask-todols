@@ -4,7 +4,7 @@ from flaskr.models.Post import _postColl
 from flaskr.models.Tag import _tagColl
 from flaskr.errors.bad_request import BadRequestError
 from flaskr.errors.not_found import NotFoundError
-from flaskr.errors.unauthenicated import UnauthenticatedError
+from flaskr.errors.forbidden import ForbiddenError
 from datetime import datetime
 from flaskr.middlewares.auth import access_token_required
 from bson import ObjectId
@@ -14,15 +14,15 @@ wsBP = Blueprint("ws", __name__, url_prefix="/api/v1/workspaces")
 
 @wsBP.get("/")
 @access_token_required
-def getAllWorkspaces(userId):
-    wss = _workspaceColl.find({"user_id": ObjectId(userId)}, {"user_id": 0})
+def getAllWorkspaces(requestUserId):
+    wss = _workspaceColl.find({"user_id": requestUserId}, {"user_id": 0})
 
     return {"workspaces": list(wss)}
 
 
 @wsBP.post("/")
 @access_token_required
-def createWorkspace(userId):
+def createWorkspace(requestUserId):
     data = request.json
 
     if not data or not data.get("title"):
@@ -34,7 +34,7 @@ def createWorkspace(userId):
         raise BadRequestError("Title is blank")
 
     ws = {
-        "user_id": ObjectId(userId),
+        "user_id": requestUserId,
         "title": ws_title,
         "created_at": datetime.now(),
     }
@@ -48,16 +48,16 @@ def createWorkspace(userId):
 
 @wsBP.get("/<workspaceId>")
 @access_token_required
-def getWorkspace(userId, workspaceId):
+def getWorkspace(requestUserId, workspaceId):
     ws = _workspaceColl.find_one({"_id": ObjectId(workspaceId)})
 
     if not ws:
         raise BadRequestError("Workspace is not exist")
 
-    if str(ws["user_id"]) != userId:
-        raise UnauthenticatedError("Don't have permission")
+    if ws["user_id"] != requestUserId:
+        raise ForbiddenError("Don't have permission")
 
-    include = request.args["include"]
+    include = request.args.get("include")
     if include:
         pipeline = [
             {
@@ -69,32 +69,36 @@ def getWorkspace(userId, workspaceId):
                 "$lookup": {
                     "from": "tags",
                     "let": {
-                        "_id": "$_id",
+                        "post_id": "$_id",
                     },
                     "pipeline": [
-                        {"$match": {"$expr": {"$eq": ["$$_id", "$post_id"]}}},
-                        {"$sort": {"$pos": 1}},
+                        {"$match": {"$expr": {"$eq": ["$$post_id", "$post_id"]}}},
+                        {"$sort": {"pos": 1}},
                     ],
                     "as": "tags",
                 },
             },
-            {},
+            {
+                "$sort": {
+                    "pos": 1,
+                },
+            },
         ]
         posts = _postColl.aggregate(pipeline)
-        ws["post"] = posts
+        ws["posts"] = list(posts)
 
     return ws
 
 
 @wsBP.put("/<workspaceId>")
 @access_token_required
-def updateWorkspace(userId, workspaceId):
+def updateWorkspace(requestUserId, workspaceId):
     ws = _workspaceColl.find_one({"_id": ObjectId(workspaceId)})
 
     if not ws:
         raise NotFoundError("Id not found")
-    if str(ws["user_id"]) != userId:
-        raise UnauthenticatedError("Don't have permission")
+    if ws["user_id"] != requestUserId:
+        raise ForbiddenError("Don't have permission")
 
     data = request.json
     if not data or not data.get("title"):
@@ -117,13 +121,13 @@ def updateWorkspace(userId, workspaceId):
 
 @wsBP.delete("/<workspaceId>")
 @access_token_required
-def deleteWorkspace(userId, workspaceId):
+def deleteWorkspace(requestUserId, workspaceId):
     ws = _workspaceColl.find_one({"_id": ObjectId(workspaceId)})
 
     if not ws:
         raise NotFoundError("Id not found")
-    if str(ws["user_id"]) != userId:
-        raise UnauthenticatedError("Don't have permission")
+    if ws["user_id"] != requestUserId:
+        raise ForbiddenError("Don't have permission")
 
     posts = _postColl.find({"workspace_id": ObjectId(workspaceId)}, {"_id": 1})
     post_ids = [ObjectId(post["_id"]) for post in posts]

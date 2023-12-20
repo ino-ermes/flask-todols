@@ -5,7 +5,7 @@ from flaskr.models.Tag import _tagColl
 from flaskr.models.User import _userColl
 from flaskr.errors.bad_request import BadRequestError
 from flaskr.errors.not_found import NotFoundError
-from flaskr.errors.unauthenicated import UnauthenticatedError
+from flaskr.errors.forbidden import ForbiddenError
 from datetime import datetime
 from flaskr.middlewares.auth import access_token_required, admin_only
 from bson import ObjectId
@@ -87,8 +87,8 @@ def createUser(_):
 def getUser(requestUserId, userId):
     requestUser = _userColl.find_one({"_id": ObjectId(requestUserId)})
     
-    if not requestUser or (requestUser["role"] != "admin" and requestUserId != userId):
-        raise UnauthenticatedError("Don't have permission")
+    if not requestUser or (requestUser["role"] != "admin" and str(requestUserId) != userId):
+        raise ForbiddenError("Don't have permission")
     
     if requestUserId == userId:
         user = requestUser
@@ -115,8 +115,8 @@ def getUser(requestUserId, userId):
 def updateUser(requestUserId, userId):
     requestUser = _userColl.find_one({"_id": ObjectId(requestUserId)})
 
-    if not requestUser or (requestUser["role"] != "admin" and requestUserId != userId):
-        raise UnauthenticatedError("Don't have permission")
+    if not requestUser or (requestUser["role"] != "admin" and str(requestUserId) != userId):
+        raise ForbiddenError("Don't have permission")
 
     return {
         "message": "updated successfully(user don't have any information updatable)"

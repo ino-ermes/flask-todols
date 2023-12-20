@@ -2,99 +2,155 @@ from flask import request, Blueprint
 from bson.objectid import ObjectId
 
 from flaskr.errors.bad_request import BadRequestError
+from flaskr.errors.forbidden import ForbiddenError
 
-from datetime import datetime
+from datetime import datetime, date
 from flaskr.middlewares.auth import access_token_required
 from flaskr.models.Tag import _tagColl
 from flaskr.models.Post import _postColl
 from flaskr.models.Workspace import _workspaceColl
-
+import isodate as iso
 tagBP = Blueprint("tag", __name__, url_prefix="/api/v1/tags")
+
 
 @tagBP.post("/")
 @access_token_required
-def createTag(user):
+def createTag(requestUserId):
     data = request.json
     if not data:
         raise BadRequestError("Please provide data")
-    
-    post = _postColl.find_one({"_id": ObjectId(data.get("post_id"))})
-    if not post:
+
+    try:
+        workspace_id = _postColl.find_one({"_id": ObjectId(data.get("post_id"))}, {"workspace_id": 1})["workspace_id"]
+        userId = _workspaceColl.find_one({"_id": workspace_id}, {"user_id": 1})["user_id"]
+    except:
         raise BadRequestError("Invalid data")
-    
-    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
-    if workspace["user_id"] != user["_id"]:
-        raise BadRequestError("Permission denied!")
-    
+
+    if userId != requestUserId:
+        raise ForbiddenError("Permission denied!")
+
     tag = {
         "post_id": ObjectId(data.get("post_id")),
         "title": data.get("title"),
         "category": data.get("category"),
         "body": data.get("body"),
         "status": data.get("status"),
-        "deadline": datetime.strptime(data.get("deadline"), "%Y-%m-%dT%H:%M:%S"),
-        "pos": data.get("pos"), 
-        "created_at": datetime.now()
+        "deadline": datetime.strptime(data.get("deadline"), "%Y/%m/%d"),
+        "pos": data.get("pos"),
+        "created_at": datetime.now(),
     }
 
     tag_id = _tagColl.insert_one(tag).inserted_id
     new_tag = _tagColl.find_one({"_id": tag_id})
     return {"tag": new_tag}
 
+
 @tagBP.get("/")
-def tag():
-    post_id = ObjectId(request.args.get("postId"))
+@access_token_required
+def getAllTags(requestUserId):
+    post_id = request.args.get("postId")
     if not post_id:
         raise BadRequestError("Invalid data")
+
+    try:
+        workspace_id = _postColl.find_one({"_id": ObjectId(post_id)}, {"workspace_id": 1})["workspace_id"]
+        userId = _workspaceColl.find_one({"_id": workspace_id}, {"user_id": 1})["user_id"]
+    except:
+        raise BadRequestError("Invalid data")
+
+    if userId != requestUserId:
+        raise ForbiddenError("Permission denied!")
     
-    tag = _tagColl.find_one({"post_id": post_id})
-    
-    return {"tag": tag}
-    
-@tagBP.get("/<string:tagId>")
-def getTag(tagId):
+    tags = _tagColl.aggregate(
+        [
+            {
+                "$match": {"post_id": ObjectId(post_id)},
+            },
+            {
+                "$sort": {
+                    "pos": 1,
+                },
+            },
+        ]
+    )
+
+    return {"tag": list(tags)}
+
+
+@tagBP.get("/<tagId>")
+@access_token_required
+def getTag(requestUserId, tagId):
     if not tagId:
         raise BadRequestError("Invalid data")
-    tag_Id = ObjectId(tagId)
-    tag = _tagColl.find_one({"_id": tag_Id})
+
+    tag = _tagColl.find_one({"_id": ObjectId(tagId)})
     if not tag:
         raise BadRequestError("Invalid data")
-    
+
+    post = _postColl.find_one({"_id": tag["post_id"]}, {"workspace_id": 1})
+    try:
+        userId = _workspaceColl.find_one({"_id": post["workspace_id"]}, {"user_id": 1})["user_id"]
+    except:
+        raise BadRequestError("Invalid data")
+    if userId != requestUserId:
+        raise ForbiddenError("Permission denied!")
+
     return {"tag": tag}
 
-@tagBP.put("/<string:tagId>")
+
+@tagBP.put("/<tagId>")
 @access_token_required
-def updateTag(user, tagId):
-    update_data = request.json
-    if not update_data:
+def updateTag(requestUserId, tagId):
+    data = request.json
+    if not data:
         raise BadRequestError("Please provide data")
-    
-    tag_Id = ObjectId(tagId)
-    post = _postColl.find_one({"_id": tag_Id})
-    if not post:
-        raise BadRequestError("Invalid data")
-    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
-    if workspace["user_id"] != user["_id"]:
-        raise BadRequestError("Permission denied!")
 
-    result = _tagColl.update_one({"_id": tag_Id}, {"$set": update_data})
-    updateTag = _tagColl.find_one({"_id": tag_Id})
-    return {
-        "tag": updateTag
-    }
-
-@tagBP.delete("/<string:tagId>")
-@access_token_required
-def deleteTag(user, tagId):
     if not tagId:
         raise BadRequestError("Invalid data")
-    
-    tag_Id = ObjectId(tagId)
-    tag = _tagColl.find_one({"_id": tag_Id})
-    post = _postColl.find_one({"_id": tag["post_id"]})
-    workspace = _workspaceColl.find_one({"_id": post["workspace_id"]})
-    if workspace["user_id"] != user["_id"]:
-        raise BadRequestError("Permission denied!")
-    if not _tagColl.delete_one({"_id": tag_Id}):
+
+    tag = _tagColl.find_one({"_id": ObjectId(tagId)})
+    if not tag:
         raise BadRequestError("Invalid data")
-    return {"status": "delete Successfuly"}
+
+    post = _postColl.find_one({"_id": tag["post_id"]}, {"workspace_id": 1})
+    try:
+        userId = _workspaceColl.find_one({"_id": post["workspace_id"]}, {"user_id": 1})["user_id"]
+    except:
+        raise BadRequestError("Invalid data")
+    if userId != requestUserId:
+        raise ForbiddenError("Permission denied!")
+    
+    updateTag = {
+        "title": data.get("title"),
+        "category": data.get("category"),
+        "body": data.get("body"),
+        "status": data.get("status"),
+        "deadline": datetime.strptime(data.get("deadline"), "%Y/%m/%d"),
+        "pos": data.get("pos"),
+    }
+
+    updatedTag = _tagColl.find_one_and_update(
+        {"_id": ObjectId(tagId)}, {"$set": updateTag}, return_document=True
+    )
+    return {"tag": updatedTag}
+
+
+@tagBP.delete("/<tagId>")
+@access_token_required
+def deleteTag(requestUserId, tagId):
+    if not tagId:
+        raise BadRequestError("Invalid data")
+
+    tag = _tagColl.find_one({"_id": ObjectId(tagId)})
+    if not tag:
+        raise BadRequestError("Invalid data")
+
+    post = _postColl.find_one({"_id": tag["post_id"]}, {"workspace_id": 1})
+    userId = _workspaceColl.find_one({"_id": post["workspace_id"]}, {"user_id": 1})[
+        "user_id"
+    ]
+    if userId != requestUserId:
+        raise ForbiddenError("Permission denied!")
+
+    _tagColl.delete_one({"_id": ObjectId(tagId)})
+    return {"message": "Deleted Successfully"}
