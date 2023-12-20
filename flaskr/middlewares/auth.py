@@ -1,7 +1,9 @@
 from functools import wraps
 import jwt
 from flask import request
-import os, bson
+import os
+from bson import ObjectId
+from flaskr.errors.forbidden import ForbiddenError
 from flaskr.errors.unauthenicated import UnauthenticatedError
 from flaskr.models.User import _userColl
 
@@ -25,7 +27,7 @@ def access_token_required(f):
         if requestUserId is None:
             raise UnauthenticatedError("Invalid Authentication token!")
 
-        return f(requestUserId, *args, **kwargs)
+        return f(ObjectId(requestUserId), *args, **kwargs)
 
     return decorated
 
@@ -34,12 +36,12 @@ def admin_only(f):
     @wraps(f)
     def decorated(requestUserId, *args, **kwargs):
         isAdmin = (
-            _userColl.find_one({"_id": bson.ObjectId(requestUserId)}, {"role": 1})["role"]
+            _userColl.find_one({"_id": requestUserId}, {"role": 1})["role"]
             == "admin"
         )
 
         if not isAdmin:
-            raise UnauthenticatedError("Must be admin!")
+            raise ForbiddenError("Must be admin!")
 
         return f(requestUserId, *args, **kwargs)
 

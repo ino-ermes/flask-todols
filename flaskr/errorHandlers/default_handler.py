@@ -1,6 +1,5 @@
 from http import HTTPStatus
 
-
 def default_handler(e):
     return {
         "message": str(e),
