@@ -58,4 +58,12 @@ def create_app(test_config=None):
     from flaskr.controllers.userController import userBP
     app.register_blueprint(userBP)
 
+    # api/v1/posts
+    from flaskr.controllers.postController import postBP
+    app.register_blueprint(postBP)
+
+    #api/v1/tags
+    from flaskr.controllers.tagController import tagBP
+    app.register_blueprint(tagBP)
+
     return app
