@@ -13,13 +13,13 @@ DELETE /workspaces/{workspaceId}
 GET /posts (filter by workspace with query parameter, e.g., ?workspaceId=456)
 POST /posts (include workspaceId in the request body)
 GET /posts/{postId}
-PUT /posts/{postId}
+PATCH /posts/{postId}
 DELETE /posts/{postId}
 
 GET /tags (filter by post with query parameter, e.g., ?postId=789)
 POST /tags (include postId in the request body)
 GET /tags/{tagId}
-PUT /tags/{tagId}
+PATCH /tags/{tagId}
 DELETE /tags/{tagId}
 #####################################################################################################3
 GET /users: List all users.
