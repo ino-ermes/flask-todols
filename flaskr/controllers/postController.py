@@ -14,7 +14,7 @@ from flaskr.middlewares.auth import access_token_required
 postBP = Blueprint("post", __name__, url_prefix="/api/v1/posts")
 
 
-@postBP.post("/")
+@postBP.post("")
 @access_token_required
 def createPost(requestUserId):
     data = request.json
@@ -41,7 +41,7 @@ def createPost(requestUserId):
     return {"post": new_post}
 
 
-@postBP.get("/")
+@postBP.get("")
 @access_token_required
 def getPosts(requestUserId):
     workspaceId = ObjectId(request.args.get("workspaceId"))

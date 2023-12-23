@@ -12,7 +12,7 @@ from bson import ObjectId
 wsBP = Blueprint("ws", __name__, url_prefix="/api/v1/workspaces")
 
 
-@wsBP.get("/")
+@wsBP.get("")
 @access_token_required
 def getAllWorkspaces(requestUserId):
     wss = _workspaceColl.find({"user_id": requestUserId}, {"user_id": 0})
@@ -20,7 +20,7 @@ def getAllWorkspaces(requestUserId):
     return {"workspaces": list(wss)}
 
 
-@wsBP.post("/")
+@wsBP.post("")
 @access_token_required
 def createWorkspace(requestUserId):
     data = request.json

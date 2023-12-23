@@ -12,7 +12,7 @@ from flaskr.models.Workspace import _workspaceColl
 tagBP = Blueprint("tag", __name__, url_prefix="/api/v1/tags")
 
 
-@tagBP.post("/")
+@tagBP.post("")
 @access_token_required
 def createTag(requestUserId):
     data = request.json
@@ -44,7 +44,7 @@ def createTag(requestUserId):
     return {"tag": new_tag}
 
 
-@tagBP.get("/")
+@tagBP.get("")
 @access_token_required
 def getAllTags(requestUserId):
     post_id = request.args.get("postId")

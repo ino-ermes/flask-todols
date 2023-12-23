@@ -15,7 +15,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 userBP = Blueprint("user", __name__, url_prefix="/api/v1/users")
 
 
-@userBP.get("/")
+@userBP.get("")
 @access_token_required
 @admin_only
 def getAllUser(_):
@@ -24,7 +24,7 @@ def getAllUser(_):
     return {"users": list(users)}
 
 
-@userBP.post("/")
+@userBP.post("")
 @access_token_required
 @admin_only
 def createUser(_):
