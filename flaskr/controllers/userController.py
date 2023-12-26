@@ -112,15 +112,40 @@ def getUser(requestUserId, userId):
 
 @userBP.put("/<userId>")
 @access_token_required
+@admin_only
 def updateUser(requestUserId, userId):
-    requestUser = _userColl.find_one({"_id": ObjectId(requestUserId)})
-
-    if not requestUser or (requestUser["role"] != "admin" and str(requestUserId) != userId):
+    user = _userColl.find_one({"_id": ObjectId(userId)})
+    
+    if not user or (user["role"] == "admin"):
         raise ForbiddenError("Don't have permission")
 
+    role = request.json.get("role")    
+    if not role:
+        raise BadRequestError("Role is empty!")
+    
+    updatedUser = _userColl.find_one_and_update({"_id": ObjectId(userId)}, {
+        "$set": {
+            "role": role,
+        }
+    }, return_document=True, projection={"hash_password" : 0})
+
     return {
-        "message": "updated successfully(user don't have any information updatable)"
+        "user": updatedUser,
     }
+    
+# @userBP.put("/<userId>")
+# @access_token_required
+# def updateUser(requestUserId, userId):
+#     requestUser = _userColl.find_one({"_id": ObjectId(requestUserId)})
+
+#     if not requestUser or (requestUser["role"] != "admin" and str(requestUserId) != userId):
+#         raise ForbiddenError("Don't have permission")
+
+
+
+#     return {
+#         "message": "updated successfully(user don't have any information updatable)"
+#     }
 
 
 @userBP.delete("/<userId>")

@@ -20,9 +20,13 @@ def access_token_required(f):
         if not token:
             raise UnauthenticatedError("Authentication Token is missing!")
 
-        data = jwt.decode(token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
-
-        requestUserId = data["user_id"]
+        data = None
+        requestUserId = None
+        try:
+            data = jwt.decode(token, os.getenv("JWT_SECRET"), algorithms=["HS256"])
+            requestUserId = data["user_id"]
+        except :
+            raise UnauthenticatedError("Signature has expired or Invalid Authentication token!")
 
         if requestUserId is None:
             raise UnauthenticatedError("Invalid Authentication token!")
