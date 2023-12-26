@@ -120,6 +120,7 @@ def updateTag(requestUserId, tagId):
         raise ForbiddenError("Permission denied!")
     
     requestData = {
+        "post_id": data.get("postId"),
         "title": data.get("title"),
         "category": data.get("category"),
         "body": data.get("body"),
