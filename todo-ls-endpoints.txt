@@ -4,23 +4,29 @@ GET /users/{userId}
 PUT /users/{userId}
 DELETE /users/{userId}
 
-GET /workspaces (filter by user with query parameter, e.g., ?userId=123)
-POST /workspaces (include userId in the request body)
+GET /workspaces?include=[True/False]
+POST /workspaces
 GET /workspaces/{workspaceId}
 PUT /workspaces/{workspaceId}
 DELETE /workspaces/{workspaceId}
 
-GET /posts (filter by workspace with query parameter, e.g., ?workspaceId=456)
-POST /posts (include workspaceId in the request body)
+GET /posts?workspaceId=[id]&includeTags=[True/False]
+POST /posts
 GET /posts/{postId}
 PATCH /posts/{postId}
 DELETE /posts/{postId}
 
-GET /tags (filter by post with query parameter, e.g., ?postId=789)
-POST /tags (include postId in the request body)
+GET /tags?postId=[id]
+POST /tags
 GET /tags/{tagId}
 PATCH /tags/{tagId}
 DELETE /tags/{tagId}
+
+POST /auth/register
+POST /auth/login
+POST /auth/forgot-password
+POST /auth/reset-password
+
 #####################################################################################################3
 GET /users: List all users.
 POST /users: Create a new user.

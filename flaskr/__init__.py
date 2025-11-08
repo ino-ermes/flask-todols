@@ -4,7 +4,7 @@ from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
 def create_app(test_config=None):
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, instance_relative_config=True, static_folder='..\client\dist')
 
     from flask_cors import CORS
     CORS(app, origins="*")
@@ -70,5 +70,14 @@ def create_app(test_config=None):
     # api/v1/tags
     from flaskr.controllers.tagController import tagBP
     app.register_blueprint(tagBP)
+    
+    @app.route('/')
+    def index():
+        return app.send_static_file('index.html')
+
+
+    @app.route('/<path:filename>')
+    def send_static(filename):
+        return app.send_static_file(filename)
 
     return app
